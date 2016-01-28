@@ -7,13 +7,12 @@ from eelbrain import *
 from copy import copy
 
 os.environ['MNE_ROOT'] = '/Applications/MNE-2.7.0-3106-MacOSX-i386/'		# make sure this line includes the exact version of MNE that you are using! #
-os.environ['SUBJECTS_DIR'] = '/Users/linglab/Experiments/TrEvCon2/mri'
+os.environ['SUBJECTS_DIR'] = '...mri'
 os.environ['FREESURFER_HOME'] = '/Applications/freesurfer/'
 
-
 # trigger scheme
-TrEvCon_trigs = {'noun_eventive_intransitive': 33,'noun_eventive_transitive': 34,'noun_noneventive_intransitive': 36,'noun_noneventive_transitive': 40,'verb_eventive_intransitive': 65,'verb_eventive_transitive': 66,'verb_noneventive_intransitive': 68,'verb_noneventive_transitive': 72}
-TrEvCon_condition_format = 'context_eventivity_transitivity'
+trigger_scheme = {'cond1': 1,'cond2': 2,'cond3': 3,'cond4': 4}
+condition_format = 'factor1_factor2'
 
 class MnePreproc:
 
@@ -41,7 +40,7 @@ class MnePreproc:
         # add variables to the class to be called on later
         self.subject = subject
         self.subj_n = self.subject.split('-')[0]
-        self.subj_code = "CA%s" % str(self.subj_n)
+        self.subj_code = "A0%s" % str(self.subj_n)
         self.experiment = experiment
 
         # directories to load from:
