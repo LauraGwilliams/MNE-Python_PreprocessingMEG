@@ -17,7 +17,7 @@ The preprocessing class is instantiated as follows. In this tutorial, the object
 
 with these arguments:
 - `subject`: the subject number or code
--  `experiment`: the experiment name (must be consistent with data filenames as explained below)
+- `experiment`: the experiment name (must be consistent with data filenames as explained below)
 - `experiment-root`: directory containing raw and processed MEG and MRI data
 - `trigger_scheme`: dictionary with keys corresponding to condition names and values indicating the relevant trigger
 - `condition_format`: a string indicating the structure of the condition names for a factorial design, e.g. `'factorA_factorB_factorC'`
@@ -111,10 +111,12 @@ Method is called automatically upon closure of the epoch selection GUI. If a rej
 
 ### Creating evokeds from epochs
 
-#### `exp.make_evoked_per_condition(factorial=False)`
+#### `exp.make_evoked_per_condition(factorial=False, combine_ids=None)`
 - `factorial`: boolean indicating whether to create evoked objects for individual levels of factors
+- `combine_ids`: dictionary indicating conditions to be combined and the combination name
 - Creates `exp.evokeds` and `exp.evoked_list`
-Operates on `exp.epochs_clean`. Generates evoked object for each condition present in the cleaned epochs.
+
+Operates on `exp.epochs_clean`. Generates evoked object for each condition present in the cleaned epochs. If some of these conditions need to combined, provide `combine_ids` as a dictionary (key=new condition name, value=list of conditions to be combined), e.g. `{'combo_condition': ['condition1', 'condition3']}`
 
 ### Source estimation
 
@@ -155,20 +157,23 @@ Performs source estimation on provided epochs for use in regression analysis of 
 
 ## Example Pipeline
 ```
-for subject in ['A0008', 'A0036', 'A0054', 'A0072', 'A0078']:
+triggers = {'condition1': 1, 'condition2': 4,
+            'condition3': 8, 'condition4': 16}
 
-  exp = MnePreproc(subject, 'TrEvCon', '/Users/linglab/Experiments/TrEvCon2', TrEvCon_trigs, TrEvCon_condition_format)
+subject = 'A0001'
 
-  exp.load_raw()
-  exp.filter_raw(low_bound=1)
-  exp.find_events()
-  exp.configure_conditions()
-  exp.add_info_to_events()
-  exp.make_epochs(exp.raw_events, tmin=-0.2, tmax=1.2, baseline=(-0.2,0))
-  exp.apply_blink_rejections()
-  exp.make_evoked_per_condition(factorial=True)
-  exp.compute_covariance_matrix()
-  exp.compute_forward_and_inverse_solutions(orientation='free')
-  exp.make_stcs(save_to_disk=True)
-  exp.save_preprocessing_notes()
+exp = MnePreproc(subject, 'MyExp', '/Users/user/Experiments/MyExp', triggers)
+
+exp.load_raw()
+exp.filter_raw(low_bound=1)
+exp.find_events()
+exp.configure_conditions()
+exp.add_info_to_events()
+exp.make_epochs(exp.raw_events, tmin=-0.2, tmax=1.2, baseline=(-0.2,0))
+exp.gui_blink_reject()
+exp.make_evoked_per_condition()
+exp.compute_covariance_matrix()
+exp.compute_forward_and_inverse_solutions(orientation='free')
+exp.make_stcs(save_to_disk=True)
+exp.save_preprocessing_notes()
 ```
