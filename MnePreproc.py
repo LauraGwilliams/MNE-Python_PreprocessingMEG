@@ -507,7 +507,7 @@ class MnePreproc:
         self.add_preprocessing_notes("Inverse solution generated and saved to %s" %op.join(self.processed_files, '%s_inv.fif' %self.subject))
         return fwd, inv
 
-    def make_epoch_stcs(self, epochs, snr = 2.0, method='dSPM', save_to_disk = False):
+    def make_epoch_stcs(self, epochs, snr = 2.0, method='dSPM', morph=True, save_to_disk = False):
         """Apply inverse operator to epochs to get source estimates of each item"""
 
 
@@ -516,6 +516,30 @@ class MnePreproc:
         inverse = mne.minimum_norm.read_inverse_operator( self.processed_files + self.subject + '_inv.fif' )
 
         eps = mne.minimum_norm.apply_inverse_epochs(epochs=epochs,inverse_operator=inverse,lambda2=lambda2,method = method)
+
+        if morph == True:
+            eps_morphed = []
+            counter = 1
+            morph_status = 'morphed'
+            # create morph map
+            # get vertices to morph to (we'll take the fsaverage vertices)
+            subject_to = 'fsaverage'
+            fs = mne.read_source_spaces(self.subjects_dir + '%s/bem/%s-ico-4-src.fif' % (subject_to, subject_to))
+            vertices_to = [fs[0]['vertno'], fs[1]['vertno']]
+            subject_from = self.subject
+
+            for stc_from in eps:
+                print "Morphing source estimate for epoch %d" %counter
+            # use the morph function
+                morph_mat = mne.compute_morph_matrix(subject_from, subject_to, vertices_from=stc_from.vertices, vertices_to=vertices_to, subjects_dir=self.subjects_dir)
+                stc = mne.morph_data_precomputed(subject_from, subject_to, stc_from, vertices_to, morph_mat)
+                # stc = mne.morph_data(subject_from, subject_to, stc_from, n_jobs=1,
+                #                     grade=vertices_to, subjects_dir=self.subjects_dir)
+
+                eps_morphed.append(stc)
+                counter += 1
+
+            eps = eps_morphed
 
         if save_to_disk:
             with open(op.join(self.stc_cont, '%s_stc_epochs.pickled' %self.subject), 'w') as fileout:
@@ -554,8 +578,9 @@ class MnePreproc:
                 stc_from = stc
 
                 # use the morph function
-                stc = mne.morph_data(subject_from, subject_to, stc_from, n_jobs=1,
-                                        grade=vertices_to, subjects_dir=self.subjects_dir)
+                morph_mat = mne.compute_morph_matrix(subject_from, subject_to, vertices_from=stc_from.vertices, vertices_to=vertices_to, subjects_dir=self.subjects_dir)
+                stc = mne.morph_data_precomputed(subject_from, subject_to, stc_from, vertices_to, morph_mat)
+
 
                 # stc_to.save('%s_audvis-meg' % subject_from)
                 # mne.compute_morph_matrix('2-COMB','3-COMB',stcs[0].vertices, stcs[5].vertices, subjects_dir=self.subjects_dir)
