@@ -458,9 +458,7 @@ class MnePreproc:
 
         if not op.exists(fname):
 
-            cov = mne.cov.compute_covariance(self.epochs_clean, tmax = 0, method=method)
-            cov_reg = mne.cov.regularize(cov, self.grand_average_evoked.info, mag=0.05,
-                                         grad = 0.05, proj = True, exclude = 'bads')
+            cov_reg = mne.cov.compute_covariance(self.epochs_clean, tmax = 0, method=method)
 
             mne.write_cov(fname, cov_reg)
 
